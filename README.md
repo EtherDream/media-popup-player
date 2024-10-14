@@ -1,6 +1,6 @@
 # Media Popup Player
 
-Mirrors a `<video>` into the Window Media Popup.
+Cast a `<video>` element to the artwork of Windows Media popup (for a sneak peek while you work).
 
 ## Demo
 
