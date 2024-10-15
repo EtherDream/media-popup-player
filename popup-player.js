@@ -36,13 +36,9 @@ function startPopupPlayer(video) {
 
   const bmpHead = makeBmpHead(CANVAS_W, CANVAS_H)
   const bmpBufs = [bmpHead.buffer]
-  const artworkItem = {
+  const artwork = {
     src: '',
     sizes: CANVAS_W + 'x' + CANVAS_H,
-    type: 'image/bmp',
-  }
-  const artwork = [artworkItem]
-  const blobOpt = {
     type: 'image/bmp',
   }
 
@@ -54,7 +50,7 @@ function startPopupPlayer(video) {
     if (video.paused) {
       return
     }
-    URL.revokeObjectURL(artworkItem.src)
+    URL.revokeObjectURL(artwork.src)
 
     const h = video.videoHeight / video.videoWidth * CANVAS_W
     const y = (CANVAS_H - h) / 2
@@ -63,9 +59,11 @@ function startPopupPlayer(video) {
     const imgData = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H)
     bmpBufs[1] = imgData.data.buffer
 
-    const blob = new Blob(bmpBufs, blobOpt)
-    artworkItem.src = URL.createObjectURL(blob)
-    navigator.mediaSession.metadata.artwork = artwork
+    const blob = new Blob(bmpBufs, {
+      type: 'image/bmp',
+    })
+    artwork.src = URL.createObjectURL(blob)
+    navigator.mediaSession.metadata.artwork = [artwork]
   }
 
   const canvas = new OffscreenCanvas(CANVAS_W, CANVAS_H)
