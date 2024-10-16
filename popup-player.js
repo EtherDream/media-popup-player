@@ -2,7 +2,6 @@ startPopupPlayer(document.querySelector('video'))
 
 /**
  * @param {HTMLVideoElement} video
- * @return setInterval id
  */
 function startPopupPlayer(video) {
 
@@ -70,5 +69,11 @@ function startPopupPlayer(video) {
   const ctx = canvas.getContext('2d', {
     willReadFrequently: true,
   })
-  return setInterval(render, 50)
+  const FRAME_DELAY = 20
+  try {
+    const worker = new Worker(`data:,setInterval(_=>postMessage(0),${FRAME_DELAY})`)
+    worker.onmessage = render
+  } catch {
+    setInterval(render, FRAME_DELAY)
+  }
 }
