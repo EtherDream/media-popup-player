@@ -1,12 +1,19 @@
 # Media Popup Player
 
-Cast a `<video>` element to the artwork of Windows Media popup (for a sneak peek while you work).
+Watch videos on the album artwork of music control bar.
 
 ## Demo
 
 https://etherdream.com/media-popup-player/demo.html
 
+(Windows) System Media Transport Controls:
+
 https://github.com/user-attachments/assets/e025fb1b-8ac2-4eb2-b0bc-0c4d8ec23e59
+
+(iOS) Lock Screen:
+
+https://github.com/user-attachments/assets/7652046f-962b-4fc7-9191-5fd65bb068af
+
 
 ## Try
 
