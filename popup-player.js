@@ -30,8 +30,8 @@ function startPopupPlayer(video) {
     return buf
   }
 
-  const CANVAS_W = 256
-  const CANVAS_H = 256
+  const CANVAS_W = 512
+  const CANVAS_H = 512
 
   const bmpHead = makeBmpHead(CANVAS_W, CANVAS_H)
   const bmpBufs = [bmpHead.buffer]
