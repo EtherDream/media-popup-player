@@ -12,7 +12,7 @@ https://github.com/user-attachments/assets/e025fb1b-8ac2-4eb2-b0bc-0c4d8ec23e59
 
 (iOS) Lock Screen:
 
-https://github.com/user-attachments/assets/7652046f-962b-4fc7-9191-5fd65bb068af
+https://github.com/user-attachments/assets/8c5c9b93-8ee1-4da7-a53a-b1a0913d9088
 
 
 ## Try
