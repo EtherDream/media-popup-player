@@ -35,13 +35,14 @@ const mediaPopupPlayer = function() {
   const blobUrls = Array(10).fill('')
   let blobUrlPos = 0
 
-  let isInited
+  let isInited = false
   let canvasCtx
-  let canvasW, canvasH
+  let canvasW = 0
+  let canvasH = 0
   let videoElem
   let timerWorker
-  let timerId
-  let interval
+  let timerId = 0
+  let interval = 0
 
   function init() {
     const workerCode = () => {
@@ -75,10 +76,16 @@ const mediaPopupPlayer = function() {
   function unload() {
     if (timerWorker) {
       timerWorker.terminate()
+      timerWorker = undefined
     } else {
       clearInterval(timerId)
     }
     blobUrls.forEach(URL.revokeObjectURL)
+    blobUrlPos = 0
+    canvasCtx = undefined
+    canvasW = canvasH = 0
+    interval = 0
+    isInited = false
   }
 
   function render() {
