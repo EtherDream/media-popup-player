@@ -1,79 +1,148 @@
-startPopupPlayer(document.querySelector('video'))
+const mediaPopupPlayer = function() {
 
-/**
- * @param {HTMLVideoElement} video
- */
-function startPopupPlayer(video) {
-
-  const makeBmpHead = (width, height) => {
+  function makeBmpHead(width, height) {
     const BMP_HEADER_LEN = 14
     const DIB_HEADER_LEN = 108
-    const buf = new Uint8Array(BMP_HEADER_LEN + DIB_HEADER_LEN)
+    const bytes = new Uint8Array(BMP_HEADER_LEN + DIB_HEADER_LEN)
 
     // https://en.wikipedia.org/wiki/BMP_file_format#Example_2
-    buf[0] = 0x42      // 'B'
-    buf[1] = 0x4D      // 'M'
-    buf[0x0A] = BMP_HEADER_LEN + DIB_HEADER_LEN
-    buf[0x0E] = DIB_HEADER_LEN
-    buf[0x1A] = 1      // Number of color planes being used
-    buf[0x1C] = 32     // Number of bits per pixel
-    buf[0x1E] = 3      // BI_BITFIELDS, no pixel array compression used
+    bytes[0] = 0x42     // 'B'
+    bytes[1] = 0x4D     // 'M'
+    bytes[0x0A] = BMP_HEADER_LEN + DIB_HEADER_LEN
+    bytes[0x0E] = DIB_HEADER_LEN
+    bytes[0x1A] = 1     // Number of color planes being used
+    bytes[0x1C] = 32    // Number of bits per pixel
+    bytes[0x1E] = 3     // BI_BITFIELDS, no pixel array compression used
 
-    buf[0x36] = 0xFF   // R channel bit mask
-    buf[0x3B] = 0xFF   // G channel bit mask
-    buf[0x40] = 0xFF   // B channel bit mask
-    buf[0x45] = 0xFF   // A channel bit mask
+    bytes[0x36] = 0xFF  // R channel bit mask
+    bytes[0x3B] = 0xFF  // G channel bit mask
+    bytes[0x40] = 0xFF  // B channel bit mask
+    bytes[0x45] = 0xFF  // A channel bit mask
 
-    const view = new DataView(buf.buffer)
+    const view = new DataView(bytes.buffer)
     view.setInt32(0x12, width, true)
     view.setInt32(0x16, -height, true)  // top-down
-    return buf
+    return bytes.buffer
   }
 
-  const CANVAS_W = 512
-  const CANVAS_H = 512
-
-  const bmpHead = makeBmpHead(CANVAS_W, CANVAS_H)
-  const bmpBufs = [bmpHead.buffer]
+  const bmpBufs = []
   const artwork = {
     src: '',
-    sizes: CANVAS_W + 'x' + CANVAS_H,
+    sizes: '',
     type: 'image/bmp',
   }
+  let isInited
+  let canvasCtx
+  let canvasW, canvasH
+  let videoElem
+  let timerWorker
+  let timerId
+  let interval
 
-  if (!navigator.mediaSession.metadata) {
-    navigator.mediaSession.metadata = new MediaMetadata()
+  function init() {
+    const workerCode = () => {
+      let timer = 0
+      onmessage = (e) => {
+        clearInterval(timer)
+        timer = setInterval(postMessage, e.data, 0)
+      }
+    }
+    try {
+      timerWorker = new Worker('data:,(' + workerCode + ')()')
+      timerWorker.onmessage = render
+    } catch {
+    }
   }
 
-  const render = () => {
-    if (video.paused) {
+  function bindVideo(video) {
+    if (!isInited) {
+      isInited = true
+      init()
+    }
+    if (!canvasW) {
+      setSize(256, 256)
+    }
+    if (!interval) {
+      setFrameRate(60)
+    }
+    videoElem = video
+  }
+
+  function freeBlob() {
+    URL.revokeObjectURL(artwork.src)
+  }
+
+  function unload() {
+    if (timerWorker) {
+      timerWorker.terminate()
+    } else {
+      clearInterval(timerId)
+    }
+    freeBlob()
+  }
+
+  function render() {
+    if (!videoElem || videoElem.paused) {
       return
     }
-    URL.revokeObjectURL(artwork.src)
+    freeBlob()
 
-    const h = video.videoHeight / video.videoWidth * CANVAS_W
-    const y = (CANVAS_H - h) / 2
+    const {videoWidth, videoHeight} = videoElem
+    const aspectRatio = videoWidth / videoHeight
+    let w, h, x, y
 
-    ctx.drawImage(video, 0, y, CANVAS_W, h)
-    const imgData = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H)
+    if (aspectRatio >= 1) {
+      // landscape mode
+      w = canvasW
+      h = canvasW / aspectRatio
+      x = 0
+      y = (canvasH - h) / 2
+    } else {
+      // portrait mode
+      w = canvasW * aspectRatio
+      h = canvasH
+      x = (canvasW - w) / 2
+      y = 0
+    }
+    canvasCtx.drawImage(videoElem, x, y, w, h)
+
+    const imgData = canvasCtx.getImageData(0, 0, canvasW, canvasH)
     bmpBufs[1] = imgData.data.buffer
 
-    const blob = new Blob(bmpBufs, {
-      type: 'image/bmp',
-    })
+    const blob = new Blob(bmpBufs, {type: 'image/bmp'})
     artwork.src = URL.createObjectURL(blob)
+
+    if (!navigator.mediaSession.metadata) {
+      navigator.mediaSession.metadata = new MediaMetadata()
+    }
     navigator.mediaSession.metadata.artwork = [artwork]
   }
 
-  const canvas = new OffscreenCanvas(CANVAS_W, CANVAS_H)
-  const ctx = canvas.getContext('2d', {
-    willReadFrequently: true,
-  })
-  const FRAME_DELAY = 20
-  try {
-    const worker = new Worker(`data:,setInterval(_=>postMessage(0),${FRAME_DELAY})`)
-    worker.onmessage = render
-  } catch {
-    setInterval(render, FRAME_DELAY)
+  function setSize(width, height) {
+    const canvas = new OffscreenCanvas(width, height)
+    canvasCtx = canvas.getContext('2d', {
+      willReadFrequently: true,
+    })
+    bmpBufs[0] = makeBmpHead(width, height)
+    artwork.sizes = width + 'x' + height
+    canvasW = width
+    canvasH = height
   }
-}
+
+  function setFrameRate(fps) {
+    interval = 1000 / fps
+    if (timerWorker) {
+      timerWorker.postMessage(interval)
+    } else {
+      clearInterval(timerId)
+      timerId = setInterval(render, interval)
+    }
+  }
+
+  return {
+    bindVideo,
+    setSize,
+    setFrameRate,
+    unload,
+  }
+}()

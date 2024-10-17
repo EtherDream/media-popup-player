@@ -17,9 +17,32 @@ https://github.com/user-attachments/assets/7652046f-962b-4fc7-9191-5fd65bb068af
 
 ## Try
 
-Open a video website and run [popup-player.js](popup-player.js).
+Open a video website and inject [popup-player.js](popup-player.js), then run:
+
+```js
+mediaPopupPlayer.bindVideo(document.querySelector('video'))
+```
 
 https://github.com/user-attachments/assets/3c62b0ad-bc79-4e7c-ac43-3d6005e2f15c
+
+## API
+
+* `bindVideo`(video?: HTMLVideoElement)
+
+  Unbind if the parameter is empty.
+
+* `setSize`(width: number, height: number)
+
+  Set the resolution of the artwork.
+
+* `setFrameRate`(fps: number)
+
+  Set the rendering frame rate.
+
+* `unload`()
+
+  Free this library.
+
 
 ## Known Issues
 
