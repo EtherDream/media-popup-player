@@ -7,10 +7,11 @@
   <style>
     body, input, textarea {
       font-family: monospace;
-      font-size: 15px;
+      font-size: 16px;
     }
     video {
       width: 500px;
+      max-width: 100%;
     }
   </style>
 </head>
@@ -35,6 +36,10 @@
   </div>
   <script src="popup-player.js"></script>
   <script>
+    if (!navigator.mediaSession) {
+      alert('MediaSession API is not supported')
+    }
+
     selectResolution.oninput = () => {
       const v = +selectResolution.options[selectResolution.selectedIndex].value
       mediaPopupPlayer.setSize(v, v)
