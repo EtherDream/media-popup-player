@@ -31,6 +31,10 @@ const mediaPopupPlayer = function() {
     sizes: '',
     type: 'image/bmp',
   }
+  // ring buffer
+  const blobUrls = Array(10).fill('')
+  let blobUrlPos = 0
+
   let isInited
   let canvasCtx
   let canvasW, canvasH
@@ -68,24 +72,20 @@ const mediaPopupPlayer = function() {
     videoElem = video
   }
 
-  function freeBlob() {
-    URL.revokeObjectURL(artwork.src)
-  }
-
   function unload() {
     if (timerWorker) {
       timerWorker.terminate()
     } else {
       clearInterval(timerId)
     }
-    freeBlob()
+    blobUrls.forEach(URL.revokeObjectURL)
   }
 
   function render() {
     if (!videoElem || videoElem.paused) {
       return
     }
-    freeBlob()
+    URL.revokeObjectURL(blobUrls[blobUrlPos])
 
     const {videoWidth, videoHeight} = videoElem
     const aspectRatio = videoWidth / videoHeight
@@ -110,7 +110,9 @@ const mediaPopupPlayer = function() {
     bmpBufs[1] = imgData.data.buffer
 
     const blob = new Blob(bmpBufs, {type: 'image/bmp'})
-    artwork.src = URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
+    artwork.src = url
+    blobUrls[blobUrlPos++ % blobUrls.length] = url
 
     if (!navigator.mediaSession.metadata) {
       navigator.mediaSession.metadata = new MediaMetadata()
