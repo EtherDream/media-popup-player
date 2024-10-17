@@ -32,7 +32,7 @@ const mediaPopupPlayer = function() {
     type: 'image/bmp',
   }
   // ring buffer
-  const blobUrls = Array(10).fill('')
+  const blobUrls = Array(20).fill('')
   let blobUrlPos = 0
 
   let isInited = false
@@ -119,7 +119,9 @@ const mediaPopupPlayer = function() {
     const blob = new Blob(bmpBufs, {type: 'image/bmp'})
     const url = URL.createObjectURL(blob)
     artwork.src = url
-    blobUrls[blobUrlPos++ % blobUrls.length] = url
+
+    blobUrls[blobUrlPos] = url
+    blobUrlPos = (blobUrlPos + 1) % blobUrls.length
 
     if (!navigator.mediaSession.metadata) {
       navigator.mediaSession.metadata = new MediaMetadata()
