@@ -27,21 +27,21 @@ https://github.com/user-attachments/assets/3c62b0ad-bc79-4e7c-ac43-3d6005e2f15c
 
 ## API
 
-* `bindVideo`(video?: HTMLVideoElement)
+* void `bindVideo`(video?: HTMLVideoElement)
 
   Unbind if the parameter is empty.
 
-* `setSize`(width: number, height: number)
+* void `setSize`(width: number, height: number)
 
   Set the resolution of the artwork.
 
-* `setFrameRate`(fps: number)
+* void `setFrameRate`(fps: number)
 
   Set the rendering frame rate.
 
-* `unload`()
+* void `unload`()
 
-  Free this library.
+  Free this library (terminate timer, etc.), call `bindVideo` will re-init.
 
 
 ## Known Issues
