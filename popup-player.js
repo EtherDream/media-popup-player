@@ -45,15 +45,16 @@ const mediaPopupPlayer = function() {
   let interval = 0
 
   function init() {
-    const workerCode = () => {
+    const workerFn = () => {
       let timer = 0
       onmessage = (e) => {
         clearInterval(timer)
         timer = setInterval(postMessage, e.data, 0)
       }
     }
+    const workerCode = '(' + workerFn + ')()'
     try {
-      timerWorker = new Worker('data:,(' + workerCode + ')()')
+      timerWorker = new Worker('data:text/javascript;base64,' + btoa(workerCode))
       timerWorker.onmessage = render
     } catch {
     }
