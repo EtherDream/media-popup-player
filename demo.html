@@ -20,8 +20,8 @@
     Resolution:
     <select id="selectResolution">
       <option value="128">128x128</option>
-      <option value="256" selected>256x256 (Windows Media Controls)</option>
-      <option value="512">512x512 (iOS Lock Screen)</option>
+      <option value="256">256x256 (Windows Media Controls)</option>
+      <option value="512" selected>512x512 (iOS Lock Screen)</option>
       <option value="1024">1024x1024</option>
     </select>
   </div>
@@ -34,8 +34,12 @@
     <button id="btnDetach">Detach Video</button>
     <button id="btnUnload">Unload Lib</button>
   </div>
+  <div id="txtError"></div>
   <script src="popup-player.js"></script>
   <script>
+    window.addEventListener('error', (e) => {
+      txtError.textContent = e.message
+    })
     if (!navigator.mediaSession) {
       alert('MediaSession API is not supported')
     }
