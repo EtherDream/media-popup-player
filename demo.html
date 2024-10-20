@@ -40,7 +40,7 @@
     <button id="btnUnload">Unload Lib</button>
   </div>
   <div id="txtError"></div>
-  <script src="popup-player.js?v=3"></script>
+  <script src="popup-player.js"></script>
   <script>
     window.addEventListener('error', (e) => {
       txtError.textContent = e.message
@@ -149,8 +149,10 @@
       }
     ]
 
-    for (const {title} of TEST_VIDEO) {
-      selectVideo.appendChild(new Option(title))
+    for (const v of TEST_VIDEO) {
+      const opt = new Option(v.title)
+      opt.title = v.description
+      selectVideo.appendChild(opt)
     }
 
     selectVideo.oninput = () => {
