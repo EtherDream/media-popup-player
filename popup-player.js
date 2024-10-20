@@ -71,7 +71,17 @@ const mediaPopupPlayer = function() {
     if (!interval) {
       setFrameRate(60)
     }
+    removeEvent()
+    if (video) {
+      video.addEventListener('resize', onVideoResize, true)
+    }
     videoElem = video
+  }
+
+  function removeEvent() {
+    if (videoElem) {
+      videoElem.removeEventListener('resize', onVideoResize, true)
+    }
   }
 
   function unload() {
@@ -81,6 +91,8 @@ const mediaPopupPlayer = function() {
     } else {
       clearInterval(timerId)
     }
+    removeEvent()
+    videoElem = undefined
     blobUrls.forEach(URL.revokeObjectURL)
     blobUrlPos = 0
     canvasCtx = undefined
@@ -89,17 +101,11 @@ const mediaPopupPlayer = function() {
     isInited = false
   }
 
-  function render() {
-    if (!videoElem || videoElem.paused) {
-      return
-    }
-    URL.revokeObjectURL(blobUrls[blobUrlPos])
+  let x, y, w, h
 
-    const {videoWidth, videoHeight} = videoElem
-    const aspectRatio = videoWidth / videoHeight
-    let w, h, x, y
-
-    if (aspectRatio >= 1) {
+  function onVideoResize() {
+    const aspectRatio = videoElem.videoWidth / videoElem.videoHeight
+    if (aspectRatio > 1) {
       // landscape mode
       w = canvasW
       h = canvasW / aspectRatio
@@ -112,6 +118,13 @@ const mediaPopupPlayer = function() {
       x = (canvasW - w) / 2
       y = 0
     }
+    canvasCtx.clearRect(0, 0, canvasW, canvasH)
+  }
+
+  function render() {
+    if (!videoElem || videoElem.paused) {
+      return
+    }
     canvasCtx.drawImage(videoElem, x, y, w, h)
 
     const imgData = canvasCtx.getImageData(0, 0, canvasW, canvasH)
@@ -121,6 +134,7 @@ const mediaPopupPlayer = function() {
     const url = URL.createObjectURL(blob)
     artwork.src = url
 
+    URL.revokeObjectURL(blobUrls[blobUrlPos])
     blobUrls[blobUrlPos] = url
     blobUrlPos = (blobUrlPos + 1) % blobUrls.length
 
