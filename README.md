@@ -33,11 +33,11 @@ https://github.com/user-attachments/assets/3c62b0ad-bc79-4e7c-ac43-3d6005e2f15c
 
 * void `setSize`(width: number, height: number)
 
-  Set the resolution of the artwork.
+  Set the resolution of the artwork. Default `256x256`.
 
 * void `setFrameRate`(fps: number)
 
-  Set the rendering frame rate.
+  Set the rendering frame rate. Default `60`.
 
 * void `unload`()
 
