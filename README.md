@@ -27,9 +27,9 @@ https://github.com/user-attachments/assets/3c62b0ad-bc79-4e7c-ac43-3d6005e2f15c
 
 ## API
 
-* void `bindVideo`(video?: HTMLVideoElement)
+* void `bindVideo`(video: HTMLVideoElement)
 
-  Unbind if the parameter is empty.
+* void `unbindVideo`()
 
 * void `setSize`(width: number, height: number)
 

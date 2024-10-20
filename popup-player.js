@@ -32,7 +32,8 @@ const mediaPopupPlayer = function() {
     type: 'image/bmp',
   }
   // ring buffer
-  const blobUrls = Array(20).fill('')
+  const BLOB_RING_MAX_INDEX = 19
+  let blobUrls
   let blobUrlPos = 0
 
   let isInited = false
@@ -45,6 +46,11 @@ const mediaPopupPlayer = function() {
   let interval = 0
 
   function init() {
+    if (isInited) {
+      return
+    }
+    isInited = true
+
     const workerFn = () => {
       let timer = 0
       onmessage = (e) => {
@@ -55,45 +61,58 @@ const mediaPopupPlayer = function() {
     const workerCode = '(' + workerFn + ')()'
     try {
       timerWorker = new Worker('data:text/javascript;base64,' + btoa(workerCode))
-      timerWorker.onmessage = render
-    } catch {
+      timerWorker.onmessage = onTimer
+    } catch (err) {
+      console.warn(err.message)
     }
   }
 
   function bindVideo(video) {
-    if (!isInited) {
-      isInited = true
-      init()
+    if (!video || video.tagName !== 'VIDEO') {
+      throw Error('the argument must be a <video> element')
     }
+    if (video === videoElem) {
+      return
+    }
+    init()
     if (!canvasW) {
       setSize(256, 256)
     }
     if (!interval) {
       setFrameRate(60)
     }
-    removeEvent()
-    if (video) {
-      video.addEventListener('resize', onVideoResize, true)
-    }
+    blobUrls = []
+    unbindVideo()
     videoElem = video
+    videoElem.addEventListener('resize', onVideoResize, true)
+    onVideoResize()
   }
 
-  function removeEvent() {
+  function unbindVideo() {
     if (videoElem) {
       videoElem.removeEventListener('resize', onVideoResize, true)
+      videoElem = undefined
     }
   }
 
   function unload() {
+    if (!isInited) {
+      return
+    }
     if (timerWorker) {
       timerWorker.terminate()
       timerWorker = undefined
     } else {
       clearInterval(timerId)
     }
-    removeEvent()
-    videoElem = undefined
-    blobUrls.forEach(URL.revokeObjectURL)
+    unbindVideo()
+
+    // prevent network errors
+    setTimeout(urls => {
+      urls.forEach(URL.revokeObjectURL)
+    }, 1000, blobUrls)
+
+    blobUrls = undefined
     blobUrlPos = 0
     canvasCtx = undefined
     canvasW = canvasH = 0
@@ -121,7 +140,7 @@ const mediaPopupPlayer = function() {
     canvasCtx.clearRect(0, 0, canvasW, canvasH)
   }
 
-  function render() {
+  function onTimer() {
     if (!videoElem || videoElem.paused) {
       return
     }
@@ -136,7 +155,7 @@ const mediaPopupPlayer = function() {
 
     URL.revokeObjectURL(blobUrls[blobUrlPos])
     blobUrls[blobUrlPos] = url
-    blobUrlPos = (blobUrlPos + 1) % blobUrls.length
+    blobUrlPos = blobUrlPos === 0 ? BLOB_RING_MAX_INDEX : (blobUrlPos - 1)
 
     if (!navigator.mediaSession.metadata) {
       navigator.mediaSession.metadata = new MediaMetadata()
@@ -145,6 +164,9 @@ const mediaPopupPlayer = function() {
   }
 
   function setSize(width, height) {
+    if (width === canvasW && height === canvasH) {
+      return
+    }
     const canvas = new OffscreenCanvas(width, height)
     canvasCtx = canvas.getContext('2d', {
       willReadFrequently: true,
@@ -153,20 +175,26 @@ const mediaPopupPlayer = function() {
     artwork.sizes = width + 'x' + height
     canvasW = width
     canvasH = height
+
+    if (videoElem) {
+      onVideoResize()
+    }
   }
 
   function setFrameRate(fps) {
     interval = 1000 / fps
+    init()
     if (timerWorker) {
       timerWorker.postMessage(interval)
     } else {
       clearInterval(timerId)
-      timerId = setInterval(render, interval)
+      timerId = setInterval(onTimer, interval)
     }
   }
 
   return {
     bindVideo,
+    unbindVideo,
     setSize,
     setFrameRate,
     unload,

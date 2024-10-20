@@ -35,12 +35,12 @@
     <video id="videoElem" controls autoplay crossorigin></video>
   </div>
   <div>
-    <button id="btnAttach">Attach Video</button>
-    <button id="btnDetach">Detach Video</button>
+    <button id="btnBind">Bind Video</button>
+    <button id="btnUnbind">Unbind Video</button>
     <button id="btnUnload">Unload Lib</button>
   </div>
   <div id="txtError"></div>
-  <script src="popup-player.js"></script>
+  <script src="popup-player.js?v=10"></script>
   <script>
     window.addEventListener('error', (e) => {
       txtError.textContent = e.message
@@ -55,12 +55,14 @@
       mediaPopupPlayer.setFrameRate(+txtFps.value)
     }
 
-    btnAttach.onclick = () => {
+    btnBind.onclick = () => {
+      selectResolution.oninput()
+      txtFps.oninput()
       mediaPopupPlayer.bindVideo(videoElem)
     }
 
-    btnDetach.onclick = () => {
-      mediaPopupPlayer.bindVideo()
+    btnUnbind.onclick = () => {
+      mediaPopupPlayer.unbindVideo()
     }
 
     btnUnload.onclick = () => {
@@ -68,7 +70,7 @@
     }
 
     // https://gist.github.com/jsturgis/3b19447b304616f18657
-    const TEST_VIDEO = [
+    const TEST_VIDEOS = [
       { "description" : "Big Buck Bunny tells the story of a giant rabbit with a heart bigger than himself. When one sunny day three rodents rudely harass him, something snaps... and the rabbit ain't no bunny anymore! In the typical cartoon tradition he prepares the nasty rodents a comical revenge.\n\nLicensed under the Creative Commons Attribution license\nhttp://www.bigbuckbunny.org",
         "sources" : [ "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" ],
         "subtitle" : "By Blender Foundation",
@@ -149,14 +151,14 @@
       }
     ]
 
-    for (const v of TEST_VIDEO) {
-      const opt = new Option(v.title)
-      opt.title = v.description
+    for (const item of TEST_VIDEOS) {
+      const opt = new Option(item.title)
+      opt.title = item.description
       selectVideo.appendChild(opt)
     }
 
     selectVideo.oninput = () => {
-      const item = TEST_VIDEO[selectVideo.selectedIndex]
+      const item = TEST_VIDEOS[selectVideo.selectedIndex]
       videoElem.src = item.sources[0]
       navigator.mediaSession.metadata = new MediaMetadata({
         title: item.title,
@@ -170,8 +172,7 @@
         return
       }
       selectVideo.oninput()
-      selectResolution.oninput()
-      btnAttach.onclick()
+      btnBind.onclick()
     }
   </script>
 </body>
